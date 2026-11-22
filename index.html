@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#101827">
+  <meta name="description" content="Weather Assistant untuk sales lapangan DA FIT AI Sales Assistant">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <title>DA FIT AI — Weather Assistant</title>
+  <style>
+    :root{color-scheme:dark;--bg:#0b1220;--panel:#141f31;--panel2:#1b2940;--text:#f4f7fb;--muted:#a9b7ca;--blue:#65b8ff;--yellow:#ffd166;--green:#62d6a5;--red:#ff8585}
+    *{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#101d31,#09111d 65%);color:var(--text);font:16px system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+    main{max-width:760px;margin:auto;padding:20px 16px 44px}.top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+    .brand{font-weight:800;letter-spacing:.3px}.sub{color:var(--muted);font-size:12px}.pill{border:1px solid #34445d;border-radius:99px;padding:7px 10px;font-size:12px;color:var(--green)}
+    h1{font-size:24px;margin:8px 0 4px}.muted{color:var(--muted)}.card{background:rgba(20,31,49,.94);border:1px solid #263750;border-radius:20px;padding:17px;margin:13px 0;box-shadow:0 12px 30px #0003}
+    .locationrow{display:flex;gap:8px;margin-top:12px}.locationrow input{min-width:0;flex:1}
+    input,button{font:inherit;border-radius:12px;border:1px solid #3a4b65;padding:12px;background:#0d1727;color:var(--text)}
+    button{background:#1d75bb;border:0;font-weight:700;cursor:pointer}button.secondary{background:#263750}button:disabled{opacity:.5}
+    .hero{display:flex;justify-content:space-between;align-items:center;gap:12px}.temp{font-size:58px;font-weight:800;line-height:1}.weathericon{font-size:54px}
+    .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:18px}.metric{background:#1b2940;border-radius:14px;padding:11px}.metric b{display:block;font-size:18px;margin-top:4px}.metric span{font-size:12px;color:var(--muted)}
+    .sectiontitle{font-size:17px;font-weight:800;margin:2px 0 12px}.hours{display:flex;gap:9px;overflow-x:auto;padding-bottom:4px}.hour{min-width:83px;background:#1b2940;border-radius:14px;padding:11px;text-align:center}.hour .ico{font-size:23px}.hour small{color:var(--muted)}
+    .advice{border-left:4px solid var(--blue);padding:10px 12px;background:#1b2940;border-radius:8px;line-height:1.5}
+    .status{font-size:13px;color:var(--muted);min-height:20px;margin-top:10px}.actions{display:flex;gap:8px;flex-wrap:wrap}.actions button{flex:1}
+    .daily{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.day{background:#1b2940;border-radius:14px;padding:12px;text-align:center}.day strong{display:block}
+    footer{text-align:center;color:var(--muted);font-size:11px;margin-top:20px;line-height:1.6}
+    @media(max-width:420px){main{padding:15px 12px 35px}.temp{font-size:50px}.metrics{gap:6px}.metric{padding:9px}.metric b{font-size:16px}}
+  </style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div><div class="brand">DA FIT AI <span style="color:var(--blue)">/ WEATHER</span></div><div class="sub">Asisten cuaca untuk sales lapangan</div></div>
+    <span class="pill" id="connection">ONLINE CHECK</span>
+  </div>
+  <h1>Cuaca & Rencana Kunjungan</h1>
+  <div class="muted" id="updated">Memuat informasi cuaca…</div>
+
+  <section class="card">
+    <div class="sectiontitle">Lokasi kerja</div>
+    <div class="muted" id="place">Koja, Jakarta Utara</div>
+    <div class="locationrow">
+      <input id="city" type="search" placeholder="Cari kota / wilayah…" aria-label="Cari kota">
+      <button id="searchBtn">Cari</button>
+    </div>
+    <div class="actions" style="margin-top:9px">
+      <button class="secondary" id="gpsBtn">◎ Gunakan GPS saya</button>
+      <button class="secondary" id="refreshBtn">↻ Perbarui</button>
+    </div>
+    <div class="status" id="status" role="status">Lokasi awal: Koja, Jakarta Utara.</div>
+  </section>
+
+  <section class="card">
+    <div class="hero">
+      <div><div class="muted" id="condition">Memuat…</div><div class="temp" id="temperature">--°</div><div class="muted" id="feels">Terasa seperti --°C</div></div>
+      <div class="weathericon" id="weatherIcon">🌤️</div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><span>💧 Kelembapan</span><b id="humidity">--%</b></div>
+      <div class="metric"><span>☔ Peluang hujan</span><b id="rain">--%</b></div>
+      <div class="metric"><span>💨 Angin</span><b id="wind">-- km/j</b></div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="sectiontitle">Prakiraan beberapa jam ke depan</div>
+    <div class="hours" id="hours"><div class="muted">Menunggu data…</div></div>
+  </section>
+
+  <section class="card">
+    <div class="sectiontitle">Prakiraan 3 hari</div>
+    <div class="daily" id="daily"><div class="muted">Menunggu data…</div></div>
+  </section>
+
+  <section class="card">
+    <div class="sectiontitle">Saran aktivitas sales</div>
+    <div class="advice" id="advice">Analisis cuaca akan muncul setelah data diterima.</div>
+    <div class="actions" style="margin-top:13px">
+      <button id="shareBtn">Bagikan ringkasan</button>
+      <button class="secondary" id="notifyBtn">Aktifkan notifikasi</button>
+    </div>
+    <div class="status" id="notifyStatus"></div>
+  </section>
+  <footer>
+    Data prakiraan: Open-Meteo. Memerlukan koneksi internet.<br>
+    Bukan peringatan resmi kebencanaan. Periksa informasi BMKG saat cuaca ekstrem.<br>
+    Data lokasi hanya digunakan untuk meminta prakiraan dan tidak disimpan ke server aplikasi.
+  </footer>
+</main>
+<script>
+const $ = id => document.getElementById(id);
+let current = {name:"Koja, Jakarta Utara",lat:-6.12,lon:106.91};
+let latestSummary = "";
+const weatherMap = {
+  0:["Cerah","☀️"],1:["Cerah berawan","🌤️"],2:["Berawan sebagian","⛅"],3:["Berawan","☁️"],
+  45:["Berkabut","🌫️"],48:["Kabut tebal","🌫️"],51:["Gerimis ringan","🌦️"],53:["Gerimis","🌦️"],55:["Gerimis lebat","🌧️"],
+  56:["Gerimis beku ringan","🌧️"],57:["Gerimis beku lebat","🌧️"],61:["Hujan ringan","🌧️"],63:["Hujan sedang","🌧️"],65:["Hujan lebat","🌧️"],
+  66:["Hujan beku ringan","🌧️"],67:["Hujan beku lebat","🌧️"],71:["Salju ringan","🌨️"],73:["Salju sedang","🌨️"],75:["Salju lebat","❄️"],
+  77:["Butiran salju","🌨️"],80:["Hujan lokal ringan","🌦️"],81:["Hujan lokal sedang","🌧️"],82:["Hujan lokal lebat","⛈️"],
+  85:["Hujan salju ringan","🌨️"],86:["Hujan salju lebat","🌨️"],95:["Badai petir","⛈️"],96:["Badai petir dan hujan es","⛈️"],99:["Badai petir kuat","⛈️"]
+};
+function info(code){return weatherMap[code]||["Kondisi tidak diketahui","🌡️"]}
+function setStatus(s){$("status").textContent=s}
+function fmtTime(s){return new Date(s).toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"})}
+function fmtDay(s){return new Date(s+"T12:00:00").toLocaleDateString("id-ID",{weekday:"short",day:"numeric",month:"short"})}
+function makeAdvice(data){
+  const h=data.hourly, now=new Date(); let candidates=[];
+  for(let i=0;i<Math.min(12,h.time.length);i++){
+    const t=new Date(h.time[i]); if(t<now) continue;
+    candidates.push({time:t,rain:h.precipitation_probability[i]??0,code:h.weather_code[i]});
+  }
+  const wet=candidates.filter(x=>x.rain>=60 || [65,82,95,96,99].includes(x.code));
+  const safe=candidates.filter(x=>x.rain<35 && ![82,95,96,99].includes(x.code));
+  let msg="";
+  if(wet.length && safe.length){
+    msg=`Risiko hujan meningkat sekitar ${fmtTime(wet[0].time)} (peluang sekitar ${wet[0].rain}%). Jika memungkinkan, dahulukan kunjungan luar ruang pada ${fmtTime(safe[0].time)}. Siapkan jas hujan dan lindungi dokumen/sampel produk.`;
+  } else if(wet.length){
+    msg=`Beberapa jam ke depan berpotensi hujan (peluang tertinggi sekitar ${Math.max(...candidates.map(x=>x.rain))}%). Pertimbangkan follow-up melalui telepon/WhatsApp dan jadwalkan ulang kunjungan luar ruang bila kondisi memburuk.`;
+  } else {
+    msg="Belum terlihat sinyal peluang hujan tinggi pada prakiraan beberapa jam ke depan. Tetap periksa pembaruan sebelum berangkat dan siapkan perlindungan dokumen serta sampel produk.";
+  }
+  if(candidates.some(x=>[95,96,99].includes(x.code))) msg+=" Ada indikasi badai petir pada prakiraan; hindari aktivitas luar ruang saat badai.";
+  return msg;
+}
+async function loadWeather(){
+  $("refreshBtn").disabled=true; setStatus("Mengambil prakiraan cuaca…");
+  try{
+    const url=`https://api.open-meteo.com/v1/forecast?latitude=${current.lat}&longitude=${current.lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m&hourly=temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset&forecast_days=3&timezone=auto`;
+    const res=await fetch(url); if(!res.ok) throw new Error("Layanan cuaca tidak merespons.");
+    const d=await res.json(); const c=d.current; const [label,ico]=info(c.weather_code);
+    $("condition").textContent=label; $("temperature").textContent=Math.round(c.temperature_2m)+"°C";
+    $("feels").textContent="Terasa seperti "+Math.round(c.apparent_temperature)+"°C";
+    $("weatherIcon").textContent=ico; $("humidity").textContent=Math.round(c.relative_humidity_2m)+"%";
+    $("wind").textContent=Math.round(c.wind_speed_10m)+" km/j";
+    const now=new Date(); let idx=d.hourly.time.findIndex(t=>new Date(t)>=now); if(idx<0)idx=0;
+    const near=d.hourly.precipitation_probability.slice(idx,idx+3); $("rain").textContent=(near.length?Math.max(...near):0)+"%";
+    $("hours").innerHTML="";
+    for(let i=idx;i<Math.min(idx+12,d.hourly.time.length);i++){
+      const [l,e]=info(d.hourly.weather_code[i]);
+      const el=document.createElement("div"); el.className="hour";
+      el.innerHTML=`<small>${fmtTime(d.hourly.time[i])}</small><div class="ico">${e}</div><b>${Math.round(d.hourly.temperature_2m[i])}°</b><small>☔ ${d.hourly.precipitation_probability[i]??0}%</small>`;
+      el.title=l; $("hours").appendChild(el);
+    }
+    $("daily").innerHTML="";
+    for(let i=0;i<d.daily.time.length;i++){
+      const [l,e]=info(d.daily.weather_code[i]);
+      const el=document.createElement("div");el.className="day";
+      el.innerHTML=`<small>${fmtDay(d.daily.time[i])}</small><div class="ico" style="font-size:24px;margin:5px">${e}</div><strong>${Math.round(d.daily.temperature_2m_max[i])}° / ${Math.round(d.daily.temperature_2m_min[i])}°</strong><small>☔ ${d.daily.precipitation_probability_max[i]??0}%</small>`;
+      el.title=l;$("daily").appendChild(el);
+    }
+    const advice=makeAdvice(d); $("advice").textContent=advice;
+    latestSummary=`Cuaca ${current.name}: ${Math.round(c.temperature_2m)}°C, ${label}. Kelembapan ${Math.round(c.relative_humidity_2m)}%, angin ${Math.round(c.wind_speed_10m)} km/jam. ${advice}`;
+    $("updated").textContent="Diperbarui "+new Date().toLocaleString("id-ID");
+    $("place").textContent=current.name; $("connection").textContent="DATA TERHUBUNG";
+    setStatus("Prakiraan berhasil diperbarui.");
+  }catch(e){setStatus("Gagal mengambil cuaca: "+e.message+" Periksa koneksi internet.");$("connection").textContent="OFFLINE / ERROR";}
+  finally{$("refreshBtn").disabled=false}
+}
+async function searchCity(){
+  const q=$("city").value.trim(); if(!q)return setStatus("Masukkan nama kota atau wilayah.");
+  setStatus("Mencari lokasi…");
+  try{
+    const r=await fetch("https://geocoding-api.open-meteo.com/v1/search?name="+encodeURIComponent(q)+"&count=1&language=id&format=json");
+    const j=await r.json(); if(!j.results?.length)throw new Error("Lokasi tidak ditemukan.");
+    const x=j.results[0]; current={name:[x.name,x.admin1,x.country].filter(Boolean).join(", "),lat:x.latitude,lon:x.longitude}; await loadWeather();
+  }catch(e){setStatus(e.message)}
+}
+function useGPS(){
+  if(!navigator.geolocation)return setStatus("Browser tidak mendukung GPS.");
+  setStatus("Meminta izin lokasi…");
+  navigator.geolocation.getCurrentPosition(async p=>{
+    current={name:"Lokasi GPS ("+p.coords.latitude.toFixed(3)+", "+p.coords.longitude.toFixed(3)+")",lat:p.coords.latitude,lon:p.coords.longitude};
+    await loadWeather();
+  },e=>setStatus("GPS tidak tersedia/izin ditolak. Gunakan pencarian kota atau Koja."),{enableHighAccuracy:true,timeout:12000,maximumAge:300000});
+}
+$("searchBtn").addEventListener("click",searchCity);
+$("city").addEventListener("keydown",e=>{if(e.key==="Enter")searchCity()});
+$("gpsBtn").addEventListener("click",useGPS);
+$("refreshBtn").addEventListener("click",loadWeather);
+$("shareBtn").addEventListener("click",async()=>{
+  if(!latestSummary)return setStatus("Tunggu data cuaca selesai dimuat.");
+  try{if(navigator.share)await navigator.share({title:"DA FIT AI Weather",text:latestSummary});else{await navigator.clipboard.writeText(latestSummary);setStatus("Ringkasan disalin.");}}catch(e){}
+});
+$("notifyBtn").addEventListener("click",async()=>{
+  if(!("Notification" in window)){$("notifyStatus").textContent="Browser tidak mendukung notifikasi.";return}
+  const p=await Notification.requestPermission();
+  $("notifyStatus").textContent=p==="granted"?"Izin notifikasi aktif. Notifikasi uji dikirim.":"Izin notifikasi belum diberikan.";
+  if(p==="granted")new Notification("DA FIT AI Weather",{body:latestSummary||"Notifikasi cuaca aktif."});
+});
+if("serviceWorker" in navigator && location.protocol!=="file:"){navigator.serviceWorker.register("./sw.js").catch(()=>{});}
+loadWeather();
+</script>
+</body></html>
